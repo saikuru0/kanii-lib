@@ -139,7 +139,7 @@ struct ClearedContext {
 }
 
 enum ServerPacket {
-    Pong { timestamp: i64 },
+    Pong { text: String },
     JoinAuth(JoinAuthPacket),
     ChatMessage {
         timestamp: i64,
@@ -225,6 +225,32 @@ impl FromStr for ClientPacket {
                 )
             }
             
+            _ => Err(ParsePacketError::NonexistentType)
+        }
+    }
+}
+
+impl FromStr for ServerPacket {
+    type Err = ParsePacketError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('\t').collect();
+        if parts.is_empty() {
+            return Err(ParsePacketError::Empty);
+        }
+
+        match parts[0] {
+            "0" => {
+                if parts.len() != 2 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-2));
+                }
+                Ok(
+                    ServerPacket::Pong {
+                        text: parts[1].to_string(),
+                    }
+                )
+            }
+
             _ => Err(ParsePacketError::NonexistentType)
         }
     }
