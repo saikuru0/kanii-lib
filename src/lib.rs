@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 trait Parsable {
     fn to_str(&self) -> String;
     fn from_str(packet: String) -> Self;
@@ -6,7 +8,6 @@ trait Parsable {
 enum ClientPacket {
     Ping { user_id: String },
     Authentication {
-        user_id: String,
         magic: String,
         authkey: String },
     Message {
@@ -172,6 +173,63 @@ enum Packet {
     Server(ServerPacket)
 }
 
+enum ParsePacketError {
+    NonexistentType,
+    FieldCount(usize),
+    WrongFormat,
+    Empty,
+}
+
+impl FromStr for ClientPacket {
+    type Err = ParsePacketError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('\t').collect();
+        if parts.is_empty() {
+            return Err(ParsePacketError::Empty);
+        }
+
+        match parts[0] {
+            "0" => {
+                if parts.len() != 2 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-2));
+                }
+                Ok(
+                    ClientPacket::Ping {
+                        user_id: parts[1].to_string(),
+                    }
+                )
+            }
+            
+            "1" => {
+                if parts.len() != 3 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-3));
+                }
+                Ok(
+                    ClientPacket::Authentication {
+                        magic: parts[1].to_string(),
+                        authkey: parts[2].to_string(),
+                    }
+                )
+            }
+            
+            "2" => {
+                if parts.len() != 3 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-3));
+                }
+                Ok(
+                    ClientPacket::Message {
+                        user_id: parts[1].to_string(),
+                        message: parts[2].to_string(),
+                    }
+                )
+            }
+            
+            _ => Err(ParsePacketError::NonexistentType)
+        }
+    }
+}
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
@@ -187,12 +245,6 @@ mod tests {
     }
 }
 
-// enum ClientPacket
-// enum ServerPacket
-// struct Parser {
-//     fn ptostr
-//     fn strtop
-// }
 // trait Transmission
 // struct Client <T:transmision> {
 //     connection
