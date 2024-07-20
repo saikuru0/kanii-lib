@@ -133,6 +133,19 @@ enum DisconnectReason {
     Flood,
 }
 
+impl FromStr for DisconnectReason {
+    type Err = ParsePacketError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "leave" => Ok(DisconnectReason::Leave),
+            "kick" => Ok(DisconnectReason::Kick),
+            "flood" => Ok(DisconnectReason::Flood),
+            "timeout" => Ok(DisconnectReason::Timeout),
+            _ => Err(ParsePacketError::WrongFormat)
+        }
+    }
+}
+
 struct UserContext {
     user_id: String,
     username: String,
@@ -409,8 +422,8 @@ impl FromStr for ServerPacket {
             },
 
             "2" => {
-                if parts.len() != 5 {
-                    return Err(ParsePacketError::FieldCount(parts.len()-5));
+                if parts.len() != 6 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-6));
                 }
 
                 let timestamp: i64;
@@ -420,7 +433,7 @@ impl FromStr for ServerPacket {
                 }
 
                 let message_flags: MessageFlags;
-                match parts[1].parse::<MessageFlags>() {
+                match parts[5].parse::<MessageFlags>() {
                     Ok(content) => message_flags = content,
                     Err(..) => return Err(ParsePacketError::FieldParsingFail)
                 }
@@ -432,6 +445,34 @@ impl FromStr for ServerPacket {
                         message: parts[3].to_string(),
                         sequence_id: parts[4].to_string(),
                         message_flags
+                    }
+                )
+            },
+
+            "3" => {
+                if parts.len() != 6 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-6));
+                }
+
+                let reason: DisconnectReason;
+                match parts[3].parse::<DisconnectReason>() {
+                    Ok(content) => reason = content,
+                    Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                }
+
+                let timestamp: i64;
+                match parts[4].parse::<i64>() {
+                    Ok(content) => timestamp = content,
+                    Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                }
+                
+                Ok(
+                    ServerPacket::UserDisconnect {
+                        user_id: parts[1].to_string(),
+                        username: parts[2].to_string(),
+                        reason,
+                        timestamp,
+                        sequence_id: parts[5].to_string()
                     }
                 )
             },
