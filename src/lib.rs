@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::str::FromStr;
 
 trait Parsable {
@@ -8,7 +9,7 @@ trait Parsable {
 enum ClientPacket {
     Ping { user_id: String },
     Authentication {
-        magic: String,
+        method: String,
         authkey: String },
     Message {
         user_id: String,
@@ -20,6 +21,19 @@ enum BadAuthReason {
     UserFail,
     SockFail,
     JoinFail,
+}
+
+impl FromStr for BadAuthReason {
+    type Err = ParsePacketError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "authfail" => Ok(BadAuthReason::AuthFail),
+            "joinfail" => Ok(BadAuthReason::JoinFail),
+            "sockfail" => Ok(BadAuthReason::SockFail),
+            "userfail" => Ok(BadAuthReason::UserFail),
+            _ => Err(ParsePacketError::WrongFormat)
+        }
+    }
 }
 
 enum JoinAuthPacket {
@@ -55,12 +69,33 @@ enum ChannelEventPacket {
     Deletion { channel_name: String },
 }
 
-enum Color {
-    Hex(i8),
-    ShortHex(i8),
-    Name(String),
-    Rgb(i8, i8, i8),
-    Hsl(i8, f32, f32),
+struct Color {
+    content: String
+}
+
+impl Color {
+    fn as_hex() -> String {
+        todo!()
+    }
+    fn as_shex() -> String {
+        todo!()
+    }
+    fn raw() -> String {
+        todo!()
+    }
+    fn as_rgb() -> (i8, i8, i8) {
+        todo!()
+    }
+    fn as_hsl() -> (i8, f32, f32) {
+        todo!()
+    }
+}
+
+impl FromStr for Color {
+    type Err = ParsePacketError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        todo!()
+    }
 }
 
 struct UserPermissions {
@@ -69,6 +104,13 @@ struct UserPermissions {
     can_logs: bool,
     can_nickname: bool,
     channel_permissions: u8,
+}
+
+impl FromStr for UserPermissions {
+    type Err = ParsePacketError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        todo!()
+    }
 }
 
 enum ChannelSwitchPacket {
@@ -178,6 +220,7 @@ enum ParsePacketError {
     FieldCount(usize),
     WrongFormat,
     Empty,
+    FieldParsingFail,
 }
 
 impl FromStr for ClientPacket {
@@ -199,7 +242,7 @@ impl FromStr for ClientPacket {
                         user_id: parts[1].to_string(),
                     }
                 )
-            }
+            },
             
             "1" => {
                 if parts.len() != 3 {
@@ -207,11 +250,11 @@ impl FromStr for ClientPacket {
                 }
                 Ok(
                     ClientPacket::Authentication {
-                        magic: parts[1].to_string(),
+                        method: parts[1].to_string(),
                         authkey: parts[2].to_string(),
                     }
                 )
-            }
+            },
             
             "2" => {
                 if parts.len() != 3 {
@@ -249,7 +292,113 @@ impl FromStr for ServerPacket {
                         text: parts[1].to_string(),
                     }
                 )
-            }
+            },
+
+            "1" => {
+                if parts.len() < 2 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-2));
+                }
+
+                match parts[1] {
+                    "y" => {
+                        if parts.len() != 8 {
+                            return Err(ParsePacketError::FieldCount(parts.len()-8));
+                        }
+
+                        let color: Color;
+                        match parts[4].parse::<Color>() {
+                            Ok(content) => color = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+
+                        let user_permissions: UserPermissions;
+                        match parts[5].parse::<UserPermissions>() {
+                            Ok(content) => user_permissions = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+
+                        let max_msg_length: i64;
+                        match parts[7].parse::<i64>() {
+                            Ok(content) => max_msg_length = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+
+                        Ok(
+                            ServerPacket::JoinAuth(
+                                JoinAuthPacket::GoodAuth {
+                                    user_id: parts[2].to_string(),
+                                    username: parts[3].to_string(),
+                                    color,
+                                    user_permissions,
+                                    channel_name: parts[6].to_string(),
+                                    max_msg_length
+                                }
+                            )
+                        )
+                    },
+
+                    "n" => {
+                        if parts.len() != 4 {
+                            return Err(ParsePacketError::FieldCount(parts.len()-8));
+                        }
+                        let reason: BadAuthReason;
+                        match parts[3].parse::<BadAuthReason>() {
+                            Ok(content) => reason = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+                        let timestamp: i64;
+                        match parts[3].parse::<i64>() {
+                            Ok(content) => timestamp = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+                        Ok(
+                            ServerPacket::JoinAuth(
+                                JoinAuthPacket::BadAuth {
+                                    reason,
+                                    timestamp
+                                }
+                            )
+                        )
+                    },
+
+                    _ => {
+                        if parts.len() != 8 {
+                            return Err(ParsePacketError::FieldCount(parts.len()-8));
+                        }
+
+                        let timestamp: i64;
+                        match parts[2].parse::<i64>() {
+                            Ok(content) => timestamp = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+
+                        let color: Color;
+                        match parts[5].parse::<Color>() {
+                            Ok(content) => color = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+
+                        let user_permissions: UserPermissions;
+                        match parts[6].parse::<UserPermissions>() {
+                            Ok(content) => user_permissions = content,
+                            Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                        }
+
+                        Ok(
+                            ServerPacket::JoinAuth(
+                                JoinAuthPacket::Join {
+                                    timestamp,
+                                    user_id: parts[3].to_string(),
+                                    username: parts[4].to_string(),
+                                    color,
+                                    user_permissions,
+                                    sequence_id: parts[7].to_string()
+                                }
+                            )
+                        ) 
+                    }
+                }
+            },
 
             _ => Err(ParsePacketError::NonexistentType)
         }
