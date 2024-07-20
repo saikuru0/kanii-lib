@@ -149,6 +149,13 @@ struct MessageFlags {
     private: bool,
 }
 
+impl FromStr for MessageFlags {
+    type Err = ParsePacketError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        todo!()
+    }
+}
+
 struct ChannelContext {
     channel_name: String,
     password_protected: bool,
@@ -287,6 +294,7 @@ impl FromStr for ServerPacket {
                 if parts.len() != 2 {
                     return Err(ParsePacketError::FieldCount(parts.len()-2));
                 }
+
                 Ok(
                     ServerPacket::Pong {
                         text: parts[1].to_string(),
@@ -398,6 +406,34 @@ impl FromStr for ServerPacket {
                         ) 
                     }
                 }
+            },
+
+            "2" => {
+                if parts.len() != 5 {
+                    return Err(ParsePacketError::FieldCount(parts.len()-5));
+                }
+
+                let timestamp: i64;
+                match parts[1].parse::<i64>() {
+                    Ok(content) => timestamp = content,
+                    Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                }
+
+                let message_flags: MessageFlags;
+                match parts[1].parse::<MessageFlags>() {
+                    Ok(content) => message_flags = content,
+                    Err(..) => return Err(ParsePacketError::FieldParsingFail)
+                }
+
+                Ok(
+                    ServerPacket::ChatMessage {
+                        timestamp,
+                        user_id: parts[2].to_string(),
+                        message: parts[3].to_string(),
+                        sequence_id: parts[4].to_string(),
+                        message_flags
+                    }
+                )
             },
 
             _ => Err(ParsePacketError::NonexistentType)
