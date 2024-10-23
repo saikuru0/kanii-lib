@@ -29,7 +29,12 @@ impl FromStr for BadAuthReason {
 
 impl Sockchatable for BadAuthReason {
     fn to_sockstr(&self) -> String {
-        todo!()
+        match self {
+            Self::AuthFail => "authfail".to_string(),
+            Self::JoinFail => "joinfail".to_string(),
+            Self::SockFail => "sockfail".to_string(),
+            Self::UserFail => "userfail".to_string(),
+        }
     }
 }
 
@@ -43,14 +48,35 @@ pub struct UserPermissions {
 
 impl FromStr for UserPermissions {
     type Err = ParsePacketError;
-    fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        todo!()
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts = s
+            .split(|c| {
+                c == char::from_u32(0x0C).expect("feed split failed")
+                    || c == char::from_u32(0x20).expect("space split failed")
+            })
+            .map(str::to_string)
+            .collect::<Vec<String>>();
+        let mut iter = parts.into_iter();
+        Ok(UserPermissions {
+            rank: iter.next().unwrap().parse::<u8>().unwrap(),
+            can_moderate: iter.next().unwrap().parse::<bool>().unwrap(),
+            can_logs: iter.next().unwrap().parse::<bool>().unwrap(),
+            can_nickname: iter.next().unwrap().parse::<bool>().unwrap(),
+            channel_permissions: iter.next().unwrap().parse::<u8>().unwrap(),
+        })
     }
 }
 
 impl Sockchatable for UserPermissions {
     fn to_sockstr(&self) -> String {
-        todo!()
+        vec![
+            self.rank.to_string().as_str(),
+            self.can_moderate.to_string().as_str(),
+            self.can_logs.to_string().as_str(),
+            self.can_nickname.to_string().as_str(),
+            self.channel_permissions.to_string().as_str(),
+        ]
+        .join("\t")
     }
 }
 
@@ -64,14 +90,35 @@ pub struct MessageFlags {
 
 impl FromStr for MessageFlags {
     type Err = ParsePacketError;
-    fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        todo!()
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut input = s.to_string();
+        Ok(MessageFlags {
+            bold: input.remove(0).to_string().parse::<bool>().unwrap(),
+            cursive: input.remove(0).to_string().parse::<bool>().unwrap(),
+            underlined: input.remove(0).to_string().parse::<bool>().unwrap(),
+            colon: input.remove(0).to_string().parse::<bool>().unwrap(),
+            private: input.remove(0).to_string().parse::<bool>().unwrap(),
+        })
     }
 }
 
 impl Sockchatable for MessageFlags {
     fn to_sockstr(&self) -> String {
-        todo!()
+        let mut output = String::new();
+        for flag in [
+            self.bold,
+            self.cursive,
+            self.underlined,
+            self.colon,
+            self.private,
+        ] {
+            if flag {
+                output.push_str("1");
+            } else {
+                output.push_str("0");
+            }
+        }
+        output
     }
 }
 
@@ -97,7 +144,12 @@ impl FromStr for DisconnectReason {
 
 impl Sockchatable for DisconnectReason {
     fn to_sockstr(&self) -> String {
-        todo!()
+        match self {
+            Self::Leave => "leave".to_string(),
+            Self::Kick => "kick".to_string(),
+            Self::Flood => "flood".to_string(),
+            Self::Timeout => "timeout".to_string(),
+        }
     }
 }
 
@@ -111,12 +163,19 @@ pub struct UserContext {
 
 impl Sockchatable for UserContext {
     fn to_sockstr(&self) -> String {
-        todo!()
+        vec![
+            self.user_id.as_str(),
+            self.username.as_str(),
+            self.color.to_sockstr().as_str(),
+            self.user_permissions.to_sockstr().as_str(),
+            self.visible.to_string().as_str(),
+        ]
+        .join("\t")
     }
 }
 
 pub struct Color {
-    content: String,
+    value: String,
 }
 
 impl Color {
@@ -139,14 +198,15 @@ impl Color {
 
 impl FromStr for Color {
     type Err = ParsePacketError;
-    fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        todo!()
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let value = s.to_string();
+        Ok(Color { value })
     }
 }
 
 impl Sockchatable for Color {
     fn to_sockstr(&self) -> String {
-        todo!()
+        self.value.clone()
     }
 }
 
@@ -158,7 +218,12 @@ pub struct ChannelContext {
 
 impl Sockchatable for ChannelContext {
     fn to_sockstr(&self) -> String {
-        todo!()
+        vec![
+            self.channel_name.as_str(),
+            self.password_protected.to_string().as_str(),
+            self.temporary.to_string().as_str(),
+        ]
+        .join("\t")
     }
 }
 
