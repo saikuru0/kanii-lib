@@ -1,4 +1,4 @@
-use crate::packets::types::{FromParts, ParsePacketError};
+use crate::packets::types::{FromParts, ParsePacketError, Sockchatable};
 
 pub struct AuthenticationPacket {
     method: String,
@@ -11,5 +11,11 @@ impl FromParts for AuthenticationPacket {
         let method = iter.next().unwrap();
         let authkey = iter.next().unwrap();
         Ok(AuthenticationPacket { method, authkey })
+    }
+}
+
+impl Sockchatable for AuthenticationPacket {
+    fn to_sockstr(&self) -> String {
+        vec![self.method.as_str(), self.authkey.as_str()].join("\t")
     }
 }

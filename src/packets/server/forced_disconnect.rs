@@ -14,3 +14,13 @@ impl FromParts for ForcedDisconnectPacket {
         Ok(ForcedDisconnectPacket { ban, timestamp })
     }
 }
+
+impl Sockchatable for ForcedDisconnectPacket {
+    fn to_sockstr(&self) -> String {
+        vec![
+            self.ban.to_string().as_str(),
+            self.timestamp.to_string().as_str(),
+        ]
+        .join("\t")
+    }
+}

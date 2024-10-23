@@ -25,3 +25,16 @@ impl FromParts for UserDisconnectPacket {
         })
     }
 }
+
+impl Sockchatable for UserDisconnectPacket {
+    fn to_sockstr(&self) -> String {
+        vec![
+            self.user_id.as_str(),
+            self.username.as_str(),
+            self.reason.to_sockstr().as_str(),
+            self.timestamp.to_string().as_str(),
+            self.sequence_id.as_str(),
+        ]
+        .join("\t")
+    }
+}

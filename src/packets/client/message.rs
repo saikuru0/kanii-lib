@@ -1,4 +1,4 @@
-use crate::packets::types::{FromParts, ParsePacketError};
+use crate::packets::types::{FromParts, ParsePacketError, Sockchatable};
 
 pub struct MessagePacket {
     user_id: String,
@@ -11,5 +11,10 @@ impl FromParts for MessagePacket {
         let user_id = iter.next().unwrap();
         let message = iter.next().unwrap();
         Ok(MessagePacket { user_id, message })
+    }
+}
+impl Sockchatable for MessagePacket {
+    fn to_sockstr(&self) -> String {
+        vec![self.user_id.as_str(), self.message.as_str()].join("\t")
     }
 }

@@ -69,3 +69,51 @@ impl FromParts for JoinAuthPacket {
         }
     }
 }
+
+impl Sockchatable for JoinAuthPacket {
+    fn to_sockstr(&self) -> String {
+        match self {
+            Self::GoodAuth {
+                user_id,
+                username,
+                color,
+                user_permissions,
+                channel_name,
+                max_msg_length,
+            } => vec![
+                "y",
+                user_id.as_str(),
+                username.as_str(),
+                color.to_sockstr().as_str(),
+                user_permissions.to_sockstr().as_str(),
+                channel_name.as_str(),
+                max_msg_length.to_string().as_str(),
+            ]
+            .join("\t"),
+
+            Self::BadAuth { reason, timestamp } => vec![
+                "n",
+                reason.to_sockstr().as_str(),
+                timestamp.to_string().as_str(),
+            ]
+            .join("\t"),
+
+            Self::Join {
+                timestamp,
+                user_id,
+                username,
+                color,
+                user_permissions,
+                sequence_id,
+            } => vec![
+                timestamp.to_string().as_str(),
+                user_id.as_str(),
+                username.as_str(),
+                color.to_sockstr().as_str(),
+                user_permissions.to_sockstr().as_str(),
+                sequence_id.as_str(),
+            ]
+            .join("\t"),
+        }
+    }
+}

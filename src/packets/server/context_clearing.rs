@@ -1,4 +1,4 @@
-use super::{FromParts, ParsePacketError};
+use super::{FromParts, ParsePacketError, Sockchatable};
 
 pub struct ContextClearingPacket {
     message_history: bool,
@@ -20,6 +20,19 @@ impl FromParts for ContextClearingPacket {
             })
         } else {
             Err(ParsePacketError::WrongFormat)
+        }
+    }
+}
+
+impl Sockchatable for ContextClearingPacket {
+    fn to_sockstr(&self) -> String {
+        match (self.message_history, self.user_list, self.channel_list) {
+            (true, false, false) => String::from("0"),
+            (false, true, false) => String::from("1"),
+            (false, false, true) => String::from("2"),
+            (true, true, false) => String::from("3"),
+            (true, true, true) => String::from("4"),
+            _ => String::from("i havent read the docs"),
         }
     }
 }

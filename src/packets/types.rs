@@ -27,6 +27,12 @@ impl FromStr for BadAuthReason {
     }
 }
 
+impl Sockchatable for BadAuthReason {
+    fn to_sockstr(&self) -> String {
+        todo!()
+    }
+}
+
 pub struct UserPermissions {
     pub rank: u8,
     pub can_moderate: bool,
@@ -37,7 +43,13 @@ pub struct UserPermissions {
 
 impl FromStr for UserPermissions {
     type Err = ParsePacketError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(_s: &str) -> Result<Self, Self::Err> {
+        todo!()
+    }
+}
+
+impl Sockchatable for UserPermissions {
+    fn to_sockstr(&self) -> String {
         todo!()
     }
 }
@@ -52,7 +64,13 @@ pub struct MessageFlags {
 
 impl FromStr for MessageFlags {
     type Err = ParsePacketError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(_s: &str) -> Result<Self, Self::Err> {
+        todo!()
+    }
+}
+
+impl Sockchatable for MessageFlags {
+    fn to_sockstr(&self) -> String {
         todo!()
     }
 }
@@ -77,12 +95,24 @@ impl FromStr for DisconnectReason {
     }
 }
 
+impl Sockchatable for DisconnectReason {
+    fn to_sockstr(&self) -> String {
+        todo!()
+    }
+}
+
 pub struct UserContext {
     pub user_id: String,
     pub username: String,
     pub color: Color,
     pub user_permissions: UserPermissions,
     pub visible: bool,
+}
+
+impl Sockchatable for UserContext {
+    fn to_sockstr(&self) -> String {
+        todo!()
+    }
 }
 
 pub struct Color {
@@ -114,12 +144,30 @@ impl FromStr for Color {
     }
 }
 
+impl Sockchatable for Color {
+    fn to_sockstr(&self) -> String {
+        todo!()
+    }
+}
+
 pub struct ChannelContext {
     pub channel_name: String,
     pub password_protected: bool,
     pub temporary: bool,
 }
 
+impl Sockchatable for ChannelContext {
+    fn to_sockstr(&self) -> String {
+        todo!()
+    }
+}
+
 pub trait FromParts {
-    fn from_parts(parts: Vec<String>) -> Result<Self, ParsePacketError> where Self: Sized;
+    fn from_parts(parts: Vec<String>) -> Result<Self, ParsePacketError>
+    where
+        Self: Sized;
+}
+
+pub trait Sockchatable {
+    fn to_sockstr(&self) -> String;
 }

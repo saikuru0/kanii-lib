@@ -16,6 +16,25 @@ impl FromParts for ChatMessagePacket {
         let message = iter.next().unwrap();
         let sequence_id = iter.next().unwrap();
         let message_flags = iter.next().unwrap().parse::<MessageFlags>().unwrap();
-        Ok(ChatMessagePacket { timestamp, user_id, message, sequence_id, message_flags })
+        Ok(ChatMessagePacket {
+            timestamp,
+            user_id,
+            message,
+            sequence_id,
+            message_flags,
+        })
+    }
+}
+
+impl Sockchatable for ChatMessagePacket {
+    fn to_sockstr(&self) -> String {
+        vec![
+            self.timestamp.to_string().as_str(),
+            self.user_id.as_str(),
+            self.message.as_str(),
+            self.sequence_id.as_str(),
+            self.message_flags.to_sockstr().as_str(),
+        ]
+        .join("\t")
     }
 }

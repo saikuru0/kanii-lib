@@ -54,3 +54,35 @@ impl FromParts for ChannelEventPacket {
         }
     }
 }
+
+impl Sockchatable for ChannelEventPacket {
+    fn to_sockstr(&self) -> String {
+        match self {
+            Self::Creation {
+                channel_name,
+                is_protected,
+                is_temporary,
+            } => vec![
+                channel_name.as_str(),
+                is_protected.to_string().as_str(),
+                is_temporary.to_string().as_str(),
+            ]
+            .join("\t"),
+
+            Self::Update {
+                channel_name,
+                new_name,
+                is_protected,
+                is_temporary,
+            } => vec![
+                channel_name.as_str(),
+                new_name.as_str(),
+                is_protected.to_string().as_str(),
+                is_temporary.to_string().as_str(),
+            ]
+            .join("\t"),
+
+            Self::Deletion { channel_name } => channel_name.clone(),
+        }
+    }
+}

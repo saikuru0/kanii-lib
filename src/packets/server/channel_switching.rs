@@ -50,7 +50,35 @@ impl FromParts for ChannelSwitchingPacket {
                 Ok(ChannelSwitchingPacket::ForcedSwitch { channel_name })
             }
 
-            _ => Err(ParsePacketError::WrongFormat)
+            _ => Err(ParsePacketError::WrongFormat),
+        }
+    }
+}
+
+impl Sockchatable for ChannelSwitchingPacket {
+    fn to_sockstr(&self) -> String {
+        match self {
+            Self::Join {
+                user_id,
+                username,
+                color,
+                user_permissions,
+                sequence_id,
+            } => vec![
+                user_id.as_str(),
+                username.as_str(),
+                color.to_sockstr().as_str(),
+                user_permissions.to_sockstr().as_str(),
+                sequence_id.as_str(),
+            ]
+            .join("\t"),
+
+            Self::Departure {
+                user_id,
+                sequence_id,
+            } => vec![user_id.as_str(), sequence_id.as_str()].join("\t"),
+
+            Self::ForcedSwitch { channel_name } => channel_name.clone(),
         }
     }
 }

@@ -22,3 +22,15 @@ impl FromParts for UserUpdatePacket {
         })
     }
 }
+
+impl Sockchatable for UserUpdatePacket {
+    fn to_sockstr(&self) -> String {
+        vec![
+            self.user_id.as_str(),
+            self.username.as_str(),
+            self.color.to_sockstr().as_str(),
+            self.user_permissions.to_sockstr().as_str(),
+        ]
+        .join("\t")
+    }
+}

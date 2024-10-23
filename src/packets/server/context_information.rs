@@ -71,22 +71,67 @@ impl FromParts for ContextInformationPacket {
             }
 
             "2" => {
-                    let count = iter.next().unwrap().parse::<i64>().unwrap();
-                    let mut contexts: Vec<ChannelContext> = Vec::new();
-                    for _ in 0..count {
-                        let channel_name = iter.next().unwrap();
-                        let password_protected = iter.next().unwrap().parse::<bool>().unwrap();
-                        let temporary = iter.next().unwrap().parse::<bool>().unwrap();
-                        contexts.push(ChannelContext {
-                            channel_name,
-                            password_protected,
-                            temporary,
-                        });
-                    }
+                let count = iter.next().unwrap().parse::<i64>().unwrap();
+                let mut contexts: Vec<ChannelContext> = Vec::new();
+                for _ in 0..count {
+                    let channel_name = iter.next().unwrap();
+                    let password_protected = iter.next().unwrap().parse::<bool>().unwrap();
+                    let temporary = iter.next().unwrap().parse::<bool>().unwrap();
+                    contexts.push(ChannelContext {
+                        channel_name,
+                        password_protected,
+                        temporary,
+                    });
+                }
                 Ok(Self::Channels { count, contexts })
             }
 
             _ => Err(ParsePacketError::WrongFormat),
+        }
+    }
+}
+
+impl Sockchatable for ContextInformationPacket {
+    fn to_sockstr(&self) -> String {
+        match self {
+            Self::ExistingUsers { count, contexts } => {
+                let mut output = count.to_string();
+                for context in contexts {
+                    output.push_str("\t");
+                    output.push_str(context.to_sockstr().as_str());
+                }
+                output
+            }
+            Self::ExistingMessage {
+                timestamp,
+                user_id,
+                username,
+                color,
+                user_permissions,
+                message,
+                sequence_id,
+                notify,
+                message_flags,
+            } => vec![
+                timestamp.to_string().as_str(),
+                user_id.as_str(),
+                username.as_str(),
+                color.to_sockstr().as_str(),
+                user_permissions.to_sockstr().as_str(),
+                message.as_str(),
+                sequence_id.as_str(),
+                notify.to_string().as_str(),
+                message_flags.to_sockstr().as_str(),
+            ]
+            .join("\t"),
+            Self::Channels { count, contexts } => {
+                let mut output = count.to_string();
+                for context in contexts {
+                    output.push_str("\t");
+                    output.push_str(context.to_sockstr().as_str());
+                }
+                output
+            }
         }
     }
 }
