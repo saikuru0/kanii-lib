@@ -1,7 +1,7 @@
 use crate::packets::types::{FromParts, ParsePacketError, Sockchatable};
 
 pub struct PingPacket {
-    user_id: String,
+    pub user_id: String,
 }
 
 impl FromParts for PingPacket {

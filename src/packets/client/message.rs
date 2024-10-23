@@ -1,8 +1,8 @@
 use crate::packets::types::{FromParts, ParsePacketError, Sockchatable};
 
 pub struct MessagePacket {
-    user_id: String,
-    message: String,
+    pub user_id: String,
+    pub message: String,
 }
 
 impl FromParts for MessagePacket {

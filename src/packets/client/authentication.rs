@@ -1,8 +1,8 @@
 use crate::packets::types::{FromParts, ParsePacketError, Sockchatable};
 
 pub struct AuthenticationPacket {
-    method: String,
-    authkey: String,
+    pub method: String,
+    pub authkey: String,
 }
 
 impl FromParts for AuthenticationPacket {
