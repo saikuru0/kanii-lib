@@ -25,11 +25,6 @@ mod tests {
     }
 
     #[test]
-    fn it_works() {
-        assert!(true)
-    }
-
-    #[test]
     fn server_tripple_conversion() {
         let lines = read_lines("server_packets.txt").expect("Could not read from file");
 
