@@ -1,5 +1,6 @@
 use crate::packets::types::*;
 
+#[derive(Debug)]
 pub enum ChannelSwitchingPacket {
     Join {
         user_id: String,
@@ -22,11 +23,11 @@ impl FromParts for ChannelSwitchingPacket {
         let mut iter = parts.into_iter();
         match iter.next().unwrap().as_str() {
             "0" => {
-                let user_id = iter.next().unwrap();
-                let username = iter.next().unwrap();
-                let color = iter.next().unwrap().parse::<Color>().unwrap();
-                let user_permissions = iter.next().unwrap().parse::<UserPermissions>().unwrap();
-                let sequence_id = iter.next().unwrap();
+                let user_id = iter.next().unwrap_or("default_user_id".to_string());
+                let username = iter.next().unwrap_or("default_username".to_string());
+                let color = iter.next().unwrap_or("default_color".to_string()).parse::<Color>().unwrap_or_default();
+                let user_permissions = iter.next().unwrap_or("default_user_permissions".to_string()).parse::<UserPermissions>().unwrap_or_default();
+                let sequence_id = iter.next().unwrap_or("default_sequence_id".to_string());
                 Ok(ChannelSwitchingPacket::Join {
                     user_id,
                     username,
@@ -37,8 +38,8 @@ impl FromParts for ChannelSwitchingPacket {
             }
 
             "1" => {
-                let user_id = iter.next().unwrap();
-                let sequence_id = iter.next().unwrap();
+                let user_id = iter.next().unwrap_or("default_user_id".to_string());
+                let sequence_id = iter.next().unwrap_or("default_sequence_id".to_string());
                 Ok(ChannelSwitchingPacket::Departure {
                     user_id,
                     sequence_id,
@@ -46,7 +47,7 @@ impl FromParts for ChannelSwitchingPacket {
             }
 
             "2" => {
-                let channel_name = iter.next().unwrap();
+                let channel_name = iter.next().unwrap_or("default_channel_name".to_string());
                 Ok(ChannelSwitchingPacket::ForcedSwitch { channel_name })
             }
 

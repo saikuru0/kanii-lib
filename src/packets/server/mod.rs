@@ -26,6 +26,7 @@ pub use user_update::UserUpdatePacket;
 
 use std::str::FromStr;
 
+#[derive(Debug)]
 pub enum ServerPacket {
     Pong(PongPacket),
     JoinAuth(JoinAuthPacket),

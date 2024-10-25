@@ -1,5 +1,6 @@
 use crate::packets::types::*;
 
+#[derive(Debug)]
 pub enum ChannelEventPacket {
     Creation {
         channel_name: String,
@@ -22,9 +23,9 @@ impl FromParts for ChannelEventPacket {
         let mut iter = parts.into_iter();
         match iter.next().unwrap().as_str() {
             "0" => {
-                let channel_name = iter.next().unwrap();
-                let is_protected = iter.next().unwrap().parse::<bool>().unwrap();
-                let is_temporary = iter.next().unwrap().parse::<bool>().unwrap();
+                let channel_name = iter.next().unwrap_or("default_channel_name".to_string());
+                let is_protected = iter.next().unwrap_or("default_is_protected".to_string()).parse_sockbool().unwrap_or(false);
+                let is_temporary = iter.next().unwrap_or("default_is_temporary".to_string()).parse_sockbool().unwrap_or(false);
                 Ok(ChannelEventPacket::Creation {
                     channel_name,
                     is_protected,
@@ -33,10 +34,10 @@ impl FromParts for ChannelEventPacket {
             }
 
             "1" => {
-                let channel_name = iter.next().unwrap();
-                let new_name = iter.next().unwrap();
-                let is_protected = iter.next().unwrap().parse::<bool>().unwrap();
-                let is_temporary = iter.next().unwrap().parse::<bool>().unwrap();
+                let channel_name = iter.next().unwrap_or("default_channel_name".to_string());
+                let new_name = iter.next().unwrap_or("default_new_name".to_string());
+                let is_protected = iter.next().unwrap_or("default_is_protected".to_string()).parse_sockbool().unwrap_or(false);
+                let is_temporary = iter.next().unwrap_or("default_is_temporary".to_string()).parse_sockbool().unwrap_or(false);
                 Ok(ChannelEventPacket::Update {
                     channel_name,
                     new_name,
@@ -46,7 +47,7 @@ impl FromParts for ChannelEventPacket {
             }
 
             "2" => {
-                let channel_name = iter.next().unwrap();
+                let channel_name = iter.next().unwrap_or("default_channel_name".to_string());
                 Ok(ChannelEventPacket::Deletion { channel_name })
             }
 
@@ -64,8 +65,8 @@ impl Sockchatable for ChannelEventPacket {
                 is_temporary,
             } => vec![
                 channel_name.as_str(),
-                is_protected.to_string().as_str(),
-                is_temporary.to_string().as_str(),
+                is_protected.to_sockstr().as_str(),
+                is_temporary.to_sockstr().as_str(),
             ]
             .join("\t"),
 
@@ -77,8 +78,8 @@ impl Sockchatable for ChannelEventPacket {
             } => vec![
                 channel_name.as_str(),
                 new_name.as_str(),
-                is_protected.to_string().as_str(),
-                is_temporary.to_string().as_str(),
+                is_protected.to_sockstr().as_str(),
+                is_temporary.to_sockstr().as_str(),
             ]
             .join("\t"),
 

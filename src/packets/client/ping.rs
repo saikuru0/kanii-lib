@@ -1,5 +1,6 @@
 use crate::packets::types::{FromParts, ParsePacketError, Sockchatable};
 
+#[derive(Debug)]
 pub struct PingPacket {
     pub user_id: String,
 }
@@ -7,7 +8,7 @@ pub struct PingPacket {
 impl FromParts for PingPacket {
     fn from_parts(parts: Vec<String>) -> Result<Self, ParsePacketError> {
         let mut iter = parts.into_iter();
-        let user_id = iter.next().unwrap();
+        let user_id = iter.next().unwrap_or("default_user_id".to_string());
         Ok(PingPacket { user_id })
     }
 }

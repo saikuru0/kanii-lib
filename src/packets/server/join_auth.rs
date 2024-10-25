@@ -1,5 +1,6 @@
 use crate::packets::types::*;
 
+#[derive(Debug)]
 pub enum JoinAuthPacket {
     GoodAuth {
         user_id: String,
@@ -28,12 +29,12 @@ impl FromParts for JoinAuthPacket {
         let mut iter = parts.into_iter();
         match iter.next().unwrap().as_str() {
             "y" => {
-                let user_id = iter.next().unwrap();
-                let username = iter.next().unwrap();
-                let color = iter.next().unwrap().parse::<Color>().unwrap();
-                let user_permissions = iter.next().unwrap().parse::<UserPermissions>().unwrap();
-                let channel_name = iter.next().unwrap();
-                let max_msg_length = iter.next().unwrap().parse::<i64>().unwrap();
+                let user_id = iter.next().unwrap_or("default_user_id".to_string());
+                let username = iter.next().unwrap_or("default_username".to_string());
+                let color = iter.next().unwrap_or("default_color".to_string()).parse::<Color>().unwrap_or_default();
+                let user_permissions = iter.next().unwrap_or("default_user_permissions".to_string()).parse::<UserPermissions>().unwrap_or_default();
+                let channel_name = iter.next().unwrap_or("default_channel_name".to_string());
+                let max_msg_length = iter.next().unwrap_or("default_max_msg_length".to_string()).parse::<i64>().unwrap_or(444);
                 Ok(Self::GoodAuth {
                     user_id,
                     username,
@@ -45,18 +46,18 @@ impl FromParts for JoinAuthPacket {
             }
 
             "n" => {
-                let reason = iter.next().unwrap().parse::<BadAuthReason>().unwrap();
-                let timestamp = iter.next().unwrap().parse::<i64>().unwrap();
+                let reason = iter.next().unwrap_or("default_reason".to_string()).parse::<BadAuthReason>().unwrap_or_default();
+                let timestamp = iter.next().unwrap_or("default_timestamp".to_string()).parse::<i64>().unwrap_or(444);
                 Ok(Self::BadAuth { reason, timestamp })
             }
 
             _ => {
-                let timestamp = iter.next().unwrap().parse::<i64>().unwrap();
-                let user_id = iter.next().unwrap();
-                let username = iter.next().unwrap();
-                let color = iter.next().unwrap().parse::<Color>().unwrap();
-                let user_permissions = iter.next().unwrap().parse::<UserPermissions>().unwrap();
-                let sequence_id = iter.next().unwrap();
+                let timestamp = iter.next().unwrap_or("default_timestamp".to_string()).parse::<i64>().unwrap_or(444);
+                let user_id = iter.next().unwrap_or("default_user_id".to_string());
+                let username = iter.next().unwrap_or("default_username".to_string());
+                let color = iter.next().unwrap_or("default_color".to_string()).parse::<Color>().unwrap_or_default();
+                let user_permissions = iter.next().unwrap_or("default_user_permissions".to_string()).parse::<UserPermissions>().unwrap_or_default();
+                let sequence_id = iter.next().unwrap_or("default_sequence_id".to_string());
                 Ok(Self::Join {
                     timestamp,
                     user_id,

@@ -1,5 +1,6 @@
 use crate::packets::types::*;
 
+#[derive(Debug)]
 pub enum ContextInformationPacket {
     ExistingUsers {
         count: i64,
@@ -27,14 +28,30 @@ impl FromParts for ContextInformationPacket {
         let mut iter = parts.into_iter();
         match iter.next().unwrap().as_str() {
             "0" => {
-                let count = iter.next().unwrap().parse::<i64>().unwrap();
+                let count = iter
+                    .next()
+                    .unwrap_or("default_count".to_string())
+                    .parse::<i64>()
+                    .unwrap_or(0);
                 let mut contexts: Vec<UserContext> = Vec::new();
                 for _ in 0..count {
-                    let user_id = iter.next().unwrap();
-                    let username = iter.next().unwrap();
-                    let color = iter.next().unwrap().parse::<Color>().unwrap();
-                    let user_permissions = iter.next().unwrap().parse::<UserPermissions>().unwrap();
-                    let visible = iter.next().unwrap().parse::<bool>().unwrap();
+                    let user_id = iter.next().unwrap_or("default_user_id".to_string());
+                    let username = iter.next().unwrap_or("default_username".to_string());
+                    let color = iter
+                        .next()
+                        .unwrap_or("default_color".to_string())
+                        .parse::<Color>()
+                        .unwrap_or_default();
+                    let user_permissions = iter
+                        .next()
+                        .unwrap_or("default_user_permissions".to_string())
+                        .parse::<UserPermissions>()
+                        .unwrap_or_default();
+                    let visible = iter
+                        .next()
+                        .unwrap_or("default_visible".to_string())
+                        .parse_sockbool()
+                        .unwrap_or(false);
                     contexts.push(UserContext {
                         user_id,
                         username,
@@ -47,15 +64,35 @@ impl FromParts for ContextInformationPacket {
             }
 
             "1" => {
-                let timestamp = iter.next().unwrap().parse::<i64>().unwrap();
-                let user_id = iter.next().unwrap();
-                let username = iter.next().unwrap();
-                let color = iter.next().unwrap().parse::<Color>().unwrap();
-                let user_permissions = iter.next().unwrap().parse::<UserPermissions>().unwrap();
-                let message = iter.next().unwrap();
-                let sequence_id = iter.next().unwrap();
-                let notify = iter.next().unwrap().parse::<bool>().unwrap();
-                let message_flags = iter.next().unwrap().parse::<MessageFlags>().unwrap();
+                let timestamp = iter
+                    .next()
+                    .unwrap_or("default_timestamp".to_string())
+                    .parse::<i64>()
+                    .unwrap_or(444);
+                let user_id = iter.next().unwrap_or("default_user_id".to_string());
+                let username = iter.next().unwrap_or("default_username".to_string());
+                let color = iter
+                    .next()
+                    .unwrap_or("default_color".to_string())
+                    .parse::<Color>()
+                    .unwrap_or_default();
+                let user_permissions = iter
+                    .next()
+                    .unwrap_or("default_user_permissions".to_string())
+                    .parse::<UserPermissions>()
+                    .unwrap_or_default();
+                let message = iter.next().unwrap_or("default_message".to_string());
+                let sequence_id = iter.next().unwrap_or("default_sequence_id".to_string());
+                let notify = iter
+                    .next()
+                    .unwrap_or("default_notify".to_string())
+                    .parse_sockbool()
+                    .unwrap_or(false);
+                let message_flags = iter
+                    .next()
+                    .unwrap_or("default_message_flags".to_string())
+                    .parse::<MessageFlags>()
+                    .unwrap_or_default();
 
                 Ok(Self::ExistingMessage {
                     timestamp,
@@ -71,12 +108,24 @@ impl FromParts for ContextInformationPacket {
             }
 
             "2" => {
-                let count = iter.next().unwrap().parse::<i64>().unwrap();
+                let count = iter
+                    .next()
+                    .unwrap_or("default_count".to_string())
+                    .parse::<i64>()
+                    .unwrap_or(0);
                 let mut contexts: Vec<ChannelContext> = Vec::new();
                 for _ in 0..count {
-                    let channel_name = iter.next().unwrap();
-                    let password_protected = iter.next().unwrap().parse::<bool>().unwrap();
-                    let temporary = iter.next().unwrap().parse::<bool>().unwrap();
+                    let channel_name = iter.next().unwrap_or("default_channel_name".to_string());
+                    let password_protected = iter
+                        .next()
+                        .unwrap_or("default_password_protected".to_string())
+                        .parse_sockbool()
+                        .unwrap_or(false);
+                    let temporary = iter
+                        .next()
+                        .unwrap_or("default_temporary".to_string())
+                        .parse_sockbool()
+                        .unwrap_or(false);
                     contexts.push(ChannelContext {
                         channel_name,
                         password_protected,
@@ -95,13 +144,16 @@ impl Sockchatable for ContextInformationPacket {
     fn to_sockstr(&self) -> String {
         match self {
             Self::ExistingUsers { count, contexts } => {
-                let mut output = count.to_string();
+                let mut output = String::new();
+                output.push_str("0\t");
+                output.push_str(count.to_string().as_str());
                 for context in contexts {
                     output.push_str("\t");
                     output.push_str(context.to_sockstr().as_str());
                 }
                 output
             }
+
             Self::ExistingMessage {
                 timestamp,
                 user_id,
@@ -113,6 +165,7 @@ impl Sockchatable for ContextInformationPacket {
                 notify,
                 message_flags,
             } => vec![
+                "1",
                 timestamp.to_string().as_str(),
                 user_id.as_str(),
                 username.as_str(),
@@ -120,12 +173,15 @@ impl Sockchatable for ContextInformationPacket {
                 user_permissions.to_sockstr().as_str(),
                 message.as_str(),
                 sequence_id.as_str(),
-                notify.to_string().as_str(),
+                notify.to_sockstr().as_str(),
                 message_flags.to_sockstr().as_str(),
             ]
             .join("\t"),
+
             Self::Channels { count, contexts } => {
-                let mut output = count.to_string();
+                let mut output = String::new();
+                output.push_str("2\t");
+                output.push_str(count.to_string().as_str());
                 for context in contexts {
                     output.push_str("\t");
                     output.push_str(context.to_sockstr().as_str());

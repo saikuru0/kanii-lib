@@ -1,5 +1,6 @@
 use crate::packets::types::*;
 
+#[derive(Debug)]
 pub struct UserDisconnectPacket {
     user_id: String,
     username: String,
@@ -11,11 +12,11 @@ pub struct UserDisconnectPacket {
 impl FromParts for UserDisconnectPacket {
     fn from_parts(parts: Vec<String>) -> Result<Self, ParsePacketError> {
         let mut iter = parts.into_iter();
-        let user_id = iter.next().unwrap();
-        let username = iter.next().unwrap();
-        let reason = iter.next().unwrap().parse::<DisconnectReason>().unwrap();
-        let timestamp = iter.next().unwrap().parse::<i64>().unwrap();
-        let sequence_id = iter.next().unwrap();
+        let user_id = iter.next().unwrap_or("default_user_id".to_string());
+        let username = iter.next().unwrap_or("default_username".to_string());
+        let reason = iter.next().unwrap_or("default_reason".to_string()).parse::<DisconnectReason>().unwrap_or_default();
+        let timestamp = iter.next().unwrap_or("default_timestamp".to_string()).parse::<i64>().unwrap_or(444);
+        let sequence_id = iter.next().unwrap_or("default_sequence_id".to_string());
         Ok(UserDisconnectPacket {
             user_id,
             username,

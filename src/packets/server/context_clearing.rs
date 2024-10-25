@@ -1,5 +1,6 @@
 use super::{FromParts, ParsePacketError, Sockchatable};
 
+#[derive(Debug)]
 pub struct ContextClearingPacket {
     message_history: bool,
     user_list: bool,

@@ -10,6 +10,7 @@ use ping::PingPacket;
 
 use super::types::*;
 
+#[derive(Debug)]
 pub enum ClientPacket {
     Ping(PingPacket),
     Authentication(AuthenticationPacket),

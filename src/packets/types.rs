@@ -7,6 +7,7 @@ pub enum ParsePacketError {
     FieldParsingFail,
 }
 
+#[derive(Debug)]
 pub enum BadAuthReason {
     AuthFail,
     UserFail,
@@ -38,6 +39,13 @@ impl Sockchatable for BadAuthReason {
     }
 }
 
+impl Default for BadAuthReason {
+    fn default() -> Self {
+        BadAuthReason::SockFail
+    }
+}
+
+#[derive(Debug)]
 pub struct UserPermissions {
     pub rank: u8,
     pub can_moderate: bool,
@@ -57,12 +65,28 @@ impl FromStr for UserPermissions {
             .map(str::to_string)
             .collect::<Vec<String>>();
         let mut iter = parts.into_iter();
+
+        let rank = iter.next().and_then(|s| s.parse::<u8>().ok()).unwrap_or(0);
+        let can_moderate = iter
+            .next()
+            .and_then(|s| s.parse_sockbool().ok())
+            .unwrap_or(false);
+        let can_logs = iter
+            .next()
+            .and_then(|s| s.parse_sockbool().ok())
+            .unwrap_or(false);
+        let can_nickname = iter
+            .next()
+            .and_then(|s| s.parse_sockbool().ok())
+            .unwrap_or(false);
+        let channel_permissions = iter.next().and_then(|s| s.parse::<u8>().ok()).unwrap_or(0);
+
         Ok(UserPermissions {
-            rank: iter.next().unwrap().parse::<u8>().unwrap(),
-            can_moderate: iter.next().unwrap().parse::<bool>().unwrap(),
-            can_logs: iter.next().unwrap().parse::<bool>().unwrap(),
-            can_nickname: iter.next().unwrap().parse::<bool>().unwrap(),
-            channel_permissions: iter.next().unwrap().parse::<u8>().unwrap(),
+            rank,
+            can_moderate,
+            can_logs,
+            can_nickname,
+            channel_permissions,
         })
     }
 }
@@ -71,15 +95,28 @@ impl Sockchatable for UserPermissions {
     fn to_sockstr(&self) -> String {
         vec![
             self.rank.to_string().as_str(),
-            self.can_moderate.to_string().as_str(),
-            self.can_logs.to_string().as_str(),
-            self.can_nickname.to_string().as_str(),
+            self.can_moderate.to_sockstr().as_str(),
+            self.can_logs.to_sockstr().as_str(),
+            self.can_nickname.to_sockstr().as_str(),
             self.channel_permissions.to_string().as_str(),
         ]
-        .join("\t")
+        .join(" ")
     }
 }
 
+impl Default for UserPermissions {
+    fn default() -> Self {
+        UserPermissions {
+            rank: 0,
+            can_moderate: false,
+            can_logs: false,
+            can_nickname: false,
+            channel_permissions: 0,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct MessageFlags {
     pub bold: bool,
     pub cursive: bool,
@@ -93,11 +130,11 @@ impl FromStr for MessageFlags {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut input = s.to_string();
         Ok(MessageFlags {
-            bold: input.remove(0).to_string().parse::<bool>().unwrap(),
-            cursive: input.remove(0).to_string().parse::<bool>().unwrap(),
-            underlined: input.remove(0).to_string().parse::<bool>().unwrap(),
-            colon: input.remove(0).to_string().parse::<bool>().unwrap(),
-            private: input.remove(0).to_string().parse::<bool>().unwrap(),
+            bold: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
+            cursive: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
+            underlined: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
+            colon: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
+            private: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
         })
     }
 }
@@ -122,6 +159,19 @@ impl Sockchatable for MessageFlags {
     }
 }
 
+impl Default for MessageFlags {
+    fn default() -> Self {
+        MessageFlags {
+            bold: false,
+            cursive: false,
+            underlined: false,
+            colon: false,
+            private: false,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum DisconnectReason {
     Leave,
     Timeout,
@@ -153,6 +203,13 @@ impl Sockchatable for DisconnectReason {
     }
 }
 
+impl Default for DisconnectReason {
+    fn default() -> Self {
+        DisconnectReason::Leave
+    }
+}
+
+#[derive(Debug)]
 pub struct UserContext {
     pub user_id: String,
     pub username: String,
@@ -168,12 +225,25 @@ impl Sockchatable for UserContext {
             self.username.as_str(),
             self.color.to_sockstr().as_str(),
             self.user_permissions.to_sockstr().as_str(),
-            self.visible.to_string().as_str(),
+            self.visible.to_sockstr().as_str(),
         ]
         .join("\t")
     }
 }
 
+impl Default for UserContext {
+    fn default() -> Self {
+        UserContext {
+            user_id: "default_user_id".to_string(),
+            username: "default_username".to_string(),
+            color: Color::default(),
+            user_permissions: UserPermissions::default(),
+            visible: false,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Color {
     value: String,
 }
@@ -210,6 +280,15 @@ impl Sockchatable for Color {
     }
 }
 
+impl Default for Color {
+    fn default() -> Self {
+        Color {
+            value: "FFF".to_string(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct ChannelContext {
     pub channel_name: String,
     pub password_protected: bool,
@@ -220,10 +299,43 @@ impl Sockchatable for ChannelContext {
     fn to_sockstr(&self) -> String {
         vec![
             self.channel_name.as_str(),
-            self.password_protected.to_string().as_str(),
-            self.temporary.to_string().as_str(),
+            self.password_protected.to_sockstr().as_str(),
+            self.temporary.to_sockstr().as_str(),
         ]
         .join("\t")
+    }
+}
+
+impl Default for ChannelContext {
+    fn default() -> Self {
+        ChannelContext {
+            channel_name: "default_channel_name".to_string(),
+            password_protected: false,
+            temporary: false,
+        }
+    }
+}
+
+pub trait ParseSockBool {
+    fn parse_sockbool(&self) -> Result<bool, ParsePacketError>;
+}
+
+impl ParseSockBool for String {
+    fn parse_sockbool(&self) -> Result<bool, ParsePacketError> {
+        match self.as_str() {
+            "0" => Ok(false),
+            "1" => Ok(true),
+            _ => Err(ParsePacketError::FieldParsingFail),
+        }
+    }
+}
+
+impl Sockchatable for bool {
+    fn to_sockstr(&self) -> String {
+        match self {
+            false => "0".to_string(),
+            true => "1".to_string(),
+        }
     }
 }
 
