@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-mod packets;
+pub mod packets;
 
 #[cfg(test)]
 mod tests {
