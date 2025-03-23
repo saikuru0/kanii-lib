@@ -57,14 +57,12 @@ pub struct UserPermissions {
 impl FromStr for UserPermissions {
     type Err = ParsePacketError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts = s
+        let mut iter = s
             .split(|c| {
-                c == char::from_u32(0x0C).expect("feed split failed")
-                    || c == char::from_u32(0x20).expect("space split failed")
+                c == 0x0C as char
+                    || c == 0x20 as char
             })
-            .map(str::to_string)
-            .collect::<Vec<String>>();
-        let mut iter = parts.into_iter();
+            .map(str::to_string);
 
         let rank = iter.next().and_then(|s| s.parse::<u8>().ok()).unwrap_or(0);
         let can_moderate = iter
