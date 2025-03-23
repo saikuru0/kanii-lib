@@ -2,9 +2,9 @@ use super::{FromParts, ParsePacketError, Sockchatable};
 
 #[derive(Debug)]
 pub struct ContextClearingPacket {
-    message_history: bool,
-    user_list: bool,
-    channel_list: bool,
+    pub message_history: bool,
+    pub user_list: bool,
+    pub channel_list: bool,
 }
 
 impl FromParts for ContextClearingPacket {

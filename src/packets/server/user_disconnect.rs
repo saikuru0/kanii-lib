@@ -2,11 +2,11 @@ use crate::packets::types::*;
 
 #[derive(Debug)]
 pub struct UserDisconnectPacket {
-    user_id: String,
-    username: String,
-    reason: DisconnectReason,
-    timestamp: i64,
-    sequence_id: String,
+    pub user_id: String,
+    pub username: String,
+    pub reason: DisconnectReason,
+    pub timestamp: i64,
+    pub sequence_id: String,
 }
 
 impl FromParts for UserDisconnectPacket {

@@ -3,8 +3,8 @@ use crate::packets::types::*;
 
 #[derive(Debug)]
 pub struct ForcedDisconnectPacket {
-    ban: bool,
-    timestamp: i64,
+    pub ban: bool,
+    pub timestamp: i64,
 }
 
 impl FromParts for ForcedDisconnectPacket {

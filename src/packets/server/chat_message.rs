@@ -2,11 +2,11 @@ use crate::packets::types::*;
 
 #[derive(Debug)]
 pub struct ChatMessagePacket {
-    timestamp: i64,
-    user_id: String,
-    message: String,
-    sequence_id: String,
-    message_flags: MessageFlags,
+    pub timestamp: i64,
+    pub user_id: String,
+    pub message: String,
+    pub sequence_id: String,
+    pub message_flags: MessageFlags,
 }
 
 impl FromParts for ChatMessagePacket {

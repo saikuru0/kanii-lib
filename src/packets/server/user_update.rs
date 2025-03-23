@@ -2,10 +2,10 @@ use crate::packets::types::*;
 
 #[derive(Debug)]
 pub struct UserUpdatePacket {
-    user_id: String,
-    username: String,
-    color: Color,
-    user_permissions: UserPermissions,
+    pub user_id: String,
+    pub username: String,
+    pub color: Color,
+    pub user_permissions: UserPermissions,
 }
 
 impl FromParts for UserUpdatePacket {

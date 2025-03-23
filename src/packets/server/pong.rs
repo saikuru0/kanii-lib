@@ -2,7 +2,7 @@ use super::{FromParts, Sockchatable};
 
 #[derive(Debug)]
 pub struct PongPacket {
-    text: String,
+    pub text: String,
 }
 
 impl FromParts for PongPacket {

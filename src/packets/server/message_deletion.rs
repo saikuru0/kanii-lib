@@ -2,7 +2,7 @@ use super::{FromParts, Sockchatable};
 
 #[derive(Debug)]
 pub struct MessageDeletionPacket {
-    sequence_id: String,
+    pub sequence_id: String,
 }
 
 impl FromParts for MessageDeletionPacket {
