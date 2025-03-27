@@ -15,6 +15,25 @@ pub enum BadAuthReason {
     JoinFail,
 }
 
+impl std::fmt::Display for BadAuthReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BadAuthReason::AuthFail => {
+                write!(f, "AuthFail")
+            }
+            BadAuthReason::UserFail => {
+                write!(f, "UserFail")
+            }
+            BadAuthReason::SockFail => {
+                write!(f, "SockFail")
+            }
+            BadAuthReason::JoinFail => {
+                write!(f, "JoinFail")
+            }
+        }
+    }
+}
+
 impl FromStr for BadAuthReason {
     type Err = ParsePacketError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -58,10 +77,7 @@ impl FromStr for UserPermissions {
     type Err = ParsePacketError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut iter = s
-            .split(|c| {
-                c == 0x0C as char
-                    || c == 0x20 as char
-            })
+            .split(|c| c == 0x0C as char || c == 0x20 as char)
             .map(str::to_string);
 
         let rank = iter.next().and_then(|s| s.parse::<u8>().ok()).unwrap_or(0);
@@ -128,11 +144,31 @@ impl FromStr for MessageFlags {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut input = s.to_string();
         Ok(MessageFlags {
-            bold: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
-            cursive: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
-            underlined: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
-            colon: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
-            private: input.remove(0).to_string().parse_sockbool().unwrap_or(false),
+            bold: input
+                .remove(0)
+                .to_string()
+                .parse_sockbool()
+                .unwrap_or(false),
+            cursive: input
+                .remove(0)
+                .to_string()
+                .parse_sockbool()
+                .unwrap_or(false),
+            underlined: input
+                .remove(0)
+                .to_string()
+                .parse_sockbool()
+                .unwrap_or(false),
+            colon: input
+                .remove(0)
+                .to_string()
+                .parse_sockbool()
+                .unwrap_or(false),
+            private: input
+                .remove(0)
+                .to_string()
+                .parse_sockbool()
+                .unwrap_or(false),
         })
     }
 }
