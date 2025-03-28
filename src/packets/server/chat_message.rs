@@ -12,11 +12,19 @@ pub struct ChatMessagePacket {
 impl FromParts for ChatMessagePacket {
     fn from_parts(parts: Vec<String>) -> Result<Self, ParsePacketError> {
         let mut iter = parts.into_iter();
-        let timestamp = iter.next().unwrap_or("default_timestamp".to_string()).parse::<i64>().unwrap_or(444);
+        let timestamp = iter
+            .next()
+            .unwrap_or("default_timestamp".to_string())
+            .parse::<i64>()
+            .unwrap_or(444);
         let user_id = iter.next().unwrap_or("default_user_id".to_string());
         let message = iter.next().unwrap_or("default_message".to_string());
         let sequence_id = iter.next().unwrap_or("default_sequence_id".to_string());
-        let message_flags = iter.next().unwrap_or("default_message_flags".to_string()).parse::<MessageFlags>().unwrap_or_default();
+        let message_flags = iter
+            .next()
+            .unwrap_or("default_message_flags".to_string())
+            .parse::<MessageFlags>()
+            .unwrap_or_default();
         Ok(ChatMessagePacket {
             timestamp,
             user_id,
