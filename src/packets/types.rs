@@ -1,3 +1,4 @@
+use csscolorparser::{Color as CssColor, ParseColorError};
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -282,24 +283,77 @@ pub struct Color {
     pub value: String,
 }
 
-// TODO: implement actual parsing (i gave up)
-// impl Color {
-//     pub fn as_hex(&self) -> String {
-//         todo!()
-//     }
-//     pub fn as_shex(&self) -> String {
-//         todo!()
-//     }
-//     pub fn raw(&self) -> String {
-//         self.value.clone()
-//     }
-//     pub fn as_rgb(&self) -> (i8, i8, i8) {
-//         todo!()
-//     }
-//     pub fn as_hsl(&self) -> (i16, f32, f32) {
-//         todo!()
-//     }
-// }
+impl Color {
+    fn parse(&self) -> Result<CssColor, ParseColorError> {
+        CssColor::from_html(&self.value)
+    }
+
+    pub fn raw(&self) -> String {
+        self.value.clone()
+    }
+
+    pub fn as_hex(&self) -> Result<String, ParseColorError> {
+        let c = self.parse()?;
+        Ok(format!(
+            "#{:02X}{:02X}{:02X}",
+            (c.r * 255.0).round() as u8,
+            (c.g * 255.0).round() as u8,
+            (c.b * 255.0).round() as u8
+        ))
+    }
+
+    pub fn as_shex(&self) -> Result<String, ParseColorError> {
+        let hex = self.as_hex()?;
+        let rr = &hex[1..3];
+        let gg = &hex[3..5];
+        let bb = &hex[5..7];
+        if rr.chars().nth(0) == rr.chars().nth(1)
+            && gg.chars().nth(0) == gg.chars().nth(1)
+            && bb.chars().nth(0) == bb.chars().nth(1)
+        {
+            Ok(format!("#{}{}{}", &rr[0..1], &gg[0..1], &bb[0..1]))
+        } else {
+            Ok(hex)
+        }
+    }
+
+    pub fn as_rgb(&self) -> Result<(i8, i8, i8), ParseColorError> {
+        let c = self.parse()?;
+        Ok((
+            (c.r * 255.0).round() as i8,
+            (c.g * 255.0).round() as i8,
+            (c.b * 255.0).round() as i8,
+        ))
+    }
+
+    pub fn as_hsl(&self) -> Result<(i16, f32, f32), ParseColorError> {
+        let c = self.parse()?;
+        let (h, s, l) = rgb_to_hsl(c.r, c.g, c.b);
+        Ok(((h * 360.0).round() as i16, s, l))
+    }
+}
+
+fn rgb_to_hsl(r: f32, g: f32, b: f32) -> (f32, f32, f32) {
+    let max = r.max(g).max(b);
+    let min = r.min(g).min(b);
+    let l = (max + min) / 2.0;
+    let d = max - min;
+    let s = if d == 0.0 {
+        0.0
+    } else {
+        d / (1.0 - (2.0 * l - 1.0).abs())
+    };
+    let h = if d == 0.0 {
+        0.0
+    } else if max == r {
+        ((g - b) / d + if g < b { 6.0 } else { 0.0 }) / 6.0
+    } else if max == g {
+        ((b - r) / d + 2.0) / 6.0
+    } else {
+        ((r - g) / d + 4.0) / 6.0
+    };
+    (h, s, l)
+}
 
 impl FromStr for Color {
     type Err = ParsePacketError;
