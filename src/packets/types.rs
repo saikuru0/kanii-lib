@@ -279,26 +279,27 @@ impl Default for UserContext {
 
 #[derive(Debug)]
 pub struct Color {
-    value: String,
+    pub value: String,
 }
 
-impl Color {
-    fn as_hex() -> String {
-        todo!()
-    }
-    fn as_shex() -> String {
-        todo!()
-    }
-    fn raw() -> String {
-        todo!()
-    }
-    fn as_rgb() -> (i8, i8, i8) {
-        todo!()
-    }
-    fn as_hsl() -> (i16, f32, f32) {
-        todo!()
-    }
-}
+// TODO: implement actual parsing (i gave up)
+// impl Color {
+//     pub fn as_hex(&self) -> String {
+//         todo!()
+//     }
+//     pub fn as_shex(&self) -> String {
+//         todo!()
+//     }
+//     pub fn raw(&self) -> String {
+//         self.value.clone()
+//     }
+//     pub fn as_rgb(&self) -> (i8, i8, i8) {
+//         todo!()
+//     }
+//     pub fn as_hsl(&self) -> (i16, f32, f32) {
+//         todo!()
+//     }
+// }
 
 impl FromStr for Color {
     type Err = ParsePacketError;
