@@ -302,6 +302,17 @@ impl Color {
         ))
     }
 
+    pub fn as_hexa(&self) -> Result<String, ParseColorError> {
+        let c = self.parse()?;
+        Ok(format!(
+            "#{:02X}{:02X}{:02X}{:02X}",
+            (c.r * 255.0).round() as u8,
+            (c.g * 255.0).round() as u8,
+            (c.b * 255.0).round() as u8,
+            (c.a * 255.0).round() as u8
+        ))
+    }
+
     pub fn as_shex(&self) -> Result<String, ParseColorError> {
         let hex = self.as_hex()?;
         let rr = &hex[1..3];
@@ -317,13 +328,46 @@ impl Color {
         }
     }
 
-    pub fn as_rgb(&self) -> Result<(i8, i8, i8), ParseColorError> {
+    pub fn as_shexa(&self) -> Result<String, ParseColorError> {
+        let hexa = self.as_hexa()?;
+        let rr = &hexa[1..3];
+        let gg = &hexa[3..5];
+        let bb = &hexa[5..7];
+        let aa = &hexa[7..9];
+        if rr.chars().nth(0) == rr.chars().nth(1)
+            && gg.chars().nth(0) == gg.chars().nth(1)
+            && bb.chars().nth(0) == bb.chars().nth(1)
+            && aa.chars().nth(0) == aa.chars().nth(1)
+        {
+            Ok(format!(
+                "#{}{}{}{}",
+                &rr[0..1],
+                &gg[0..1],
+                &bb[0..1],
+                &aa[0..1]
+            ))
+        } else {
+            Ok(hexa)
+        }
+    }
+
+    pub fn as_rgb(&self) -> Result<[u8; 3], ParseColorError> {
         let c = self.parse()?;
-        Ok((
-            (c.r * 255.0).round() as i8,
-            (c.g * 255.0).round() as i8,
-            (c.b * 255.0).round() as i8,
-        ))
+        Ok([
+            (c.r * 255.0).round() as u8,
+            (c.g * 255.0).round() as u8,
+            (c.b * 255.0).round() as u8,
+        ])
+    }
+
+    pub fn as_rgba(&self) -> Result<[u8; 4], ParseColorError> {
+        let c = self.parse()?;
+        Ok([
+            (c.r * 255.0).round() as u8,
+            (c.g * 255.0).round() as u8,
+            (c.b * 255.0).round() as u8,
+            (c.a * 255.0).round() as u8,
+        ])
     }
 
     pub fn as_hsl(&self) -> Result<(i16, f32, f32), ParseColorError> {
